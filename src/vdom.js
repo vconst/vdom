@@ -26,6 +26,39 @@ var v = window.v = function(selector, attrs, children) {
 	return new v.fn.init(selector, attrs, children);
 };
 
+v.attrHooks = {
+	"class": function(val) {
+		var result = val;
+		if(isObject(val)) {
+			result = [];
+			for(var name in val) {
+				if(val[name]) {
+					result.push(name);
+				}
+			}
+			result = result.join(" ");
+		}
+		return result;
+	},
+	"style": function(val) {
+		var result = val;
+		if(isObject(val)) {
+			result = [];
+			for(var name in val) {
+				if(val[name]) {
+					result.push(name + ": " + val[name]);
+				}
+			}
+			result = result.join("; ");
+		}
+		return result;
+	}
+}
+
+function isObject(obj) {
+	return Object.getPrototypeOf(obj) === Object.prototype;
+}
+
 v.fn = v.prototype = {
 	version: "0.1.0",
 	init: function(selector, attrs, children) {
@@ -52,7 +85,13 @@ v.fn = v.prototype = {
 
 		if(attrs) {
 			for(var name in attrs) {
-				this.node.setAttribute(name, attrs[name]);
+				var attrValue = attrs[name];
+				var attrHook = v.attrHooks[name];
+				
+				if(attrHook) {
+					attrValue = attrHook(attrValue);
+				}
+				this.node.setAttribute(name, attrValue);
 			}
 		}
 		this.node.textContent = "";
@@ -62,18 +101,16 @@ v.fn = v.prototype = {
 			}
 			for(var i = 0; i < children.length; i++) {
 				var vNode = children[i];
-				if(vNode) {
-					if(vNode instanceof window.Array && typeof vNode[0] === "string") {
-						vNode = v(vNode);
-					}
-					if(vNode instanceof v) {
-						vNode.build();
-						this.node.appendChild(vNode.node);
-					}
-					else if(typeof vNode === "string") {
-						var node = document.createTextNode(vNode);
-						this.node.appendChild(node);
-					}
+				if(vNode instanceof window.Array && typeof vNode[0] === "string") {
+					vNode = v(vNode);
+				}
+				if(vNode instanceof v) {
+					vNode.build();
+					this.node.appendChild(vNode.node);
+				}
+				else if(typeof vNode === "string") {
+					var node = document.createTextNode(vNode);
+					this.node.appendChild(node);
 				}
 			}
 		}
