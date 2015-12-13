@@ -12,14 +12,14 @@ var v = window.v = function(selector, attrs, children) {
 		return selector.v;
 	}
 
-    return new v.fn.init(selector, attrs, children);
+	return new v.fn.init(selector, attrs, children);
 };
 
 v.fn = v.prototype = {
-    version: "0.1.0",
-    init: function(selector, attrs, children) {
-        this.attrs = attrs;
-        this.children = children;
+	version: "0.1.0",
+	init: function(selector, attrs, children) {
+		this.attrs = attrs;
+		this.children = children;
 
 		if(selector instanceof Element) {
 			this.node = selector;
@@ -27,19 +27,19 @@ v.fn = v.prototype = {
 			this.apply();
 		}
 		else {
-	        this.nodeType = selector;
+			this.nodeType = selector;
 		}
-    },
-    apply: function() {
-    	var attrs = this.attrs,
-    		name;
+	},
+	apply: function() {
+		var attrs = this.attrs,
+			name;
 
-    	if(attrs) {
-    		for(name in attrs) {
-    			this.node.setAttribute(name, attrs[name]);
-    		}
-    	}
-    }
+		if(attrs) {
+			for(name in attrs) {
+				this.node.setAttribute(name, attrs[name]);
+			}
+		}
+	}
 };
 
 v.fn.init.prototype = v.fn;
