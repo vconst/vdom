@@ -29,6 +29,21 @@ QUnit.test("apply attributes on dom element", function(assert) {
   assert.equal(el.style.width, "200px", "style.width property");
 });
 
+QUnit.test("apply attributes as object on dom element", function(assert) {
+  var el = document.createElement("div");
+
+  var v1 = v(el, { id: "test-id", class: { test1: true, test2: true, test3: false }, style: { width: "200px", height: "100px" }});
+
+  assert.ok(el.v, "vdom element is created" );
+  assert.strictEqual(el.v, v1, "vdom element instance in dom" );
+  assert.ok(el.v instanceof v.fn.init, "vdom element is instance of v" );
+  assert.equal(el.getAttribute("id"), "test-id", "id attribute");
+  assert.equal(el.getAttribute("class"), "test1 test2", "class attribute");
+  assert.equal(el.className, "test1 test2", "className property");
+  assert.equal(el.style.width, "200px", "style.width property");
+});
+
+
 QUnit.test("apply attributes on virtual dom element", function(assert) {
   var el = document.createElement("div");
   var v1 = v(el, { id: "test-id-old" });
