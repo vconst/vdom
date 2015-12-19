@@ -28,34 +28,26 @@ var v = window.v = function(selector, attrs, children) {
 	return new v.fn.init(selector, attrs, children);
 };
 
-v.attrHooks = {
-	"class": function(val) {
+function compileComplexAttrHook(delimiter, parameterSerializer) {
+	return function(val) {
 		var result = val;
 		if(isObject(val)) {
 			result = [];
 			for(var name in val) {
 				if(val[name]) {
-					result.push(name);
+					result.push(parameterSerializer(name, val[name]));
 				}
 			}
-			result = result.join(" ");
+			result = result.join(delimiter);
 		}
 		return result;
-	},
-	"style": function(val) {
-		var result = val;
-		if(isObject(val)) {
-			result = [];
-			for(var name in val) {
-				if(val[name]) {
-					result.push(name + ": " + val[name]);
-				}
-			}
-			result = result.join("; ");
-		}
-		return result;
-	}
+	};
 }
+
+v.attrHooks = {
+	"class": compileComplexAttrHook(" ", function(name) { return name; }),
+	"style": compileComplexAttrHook("; ", function(name, value) { return name + ": " + value; })
+};
 
 function isObject(obj) {
 	return Object.getPrototypeOf(obj) === Object.prototype;
