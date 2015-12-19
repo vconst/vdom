@@ -7,7 +7,7 @@ QUnit.test("namespace", function(assert) {
 });
 
 QUnit.test("init", function(assert) {
-  var el = v("div");
+  var el = v("<div>");
 
   assert.ok(el, "vdom element is created" );
   assert.equal(typeof el, "object", "vdom element type" );
@@ -83,7 +83,7 @@ QUnit.test("apply text content", function(assert) {
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");
-  assert.equal(el.innerText, "Test Text", "id attribute");
+  assert.equal(el.innerText, "Test Text", "inner text");
 });
 
 QUnit.test("apply text content several times", function(assert) {
@@ -100,7 +100,7 @@ QUnit.test("apply text content several times", function(assert) {
 QUnit.test("apply children as virtual nodes", function(assert) {
   var el = document.createElement("div");
 
-  v(el, { id: "test-id" }, [v("span", "Test Text 1"), v("span", "Test Text 2")]);
+  v(el, { id: "test-id" }, [v("<span>", "Test Text 1"), v("<span>", "Test Text 2")]);
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");
@@ -114,7 +114,7 @@ QUnit.test("apply children as virtual nodes", function(assert) {
 QUnit.test("apply children as virtual node arrays", function(assert) {
   var el = document.createElement("div");
 
-  v(el, { id: "test-id" }, [["span", "Test Text 1"], ["span", "Test Text 2"]]);
+  v(el, { id: "test-id" }, [["<span>", "Test Text 1"], ["<span>", "Test Text 2"]]);
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");
@@ -128,7 +128,7 @@ QUnit.test("apply children as virtual node arrays", function(assert) {
 QUnit.test("apply children as virtual nodes arrays and texts", function(assert) {
   var el = document.createElement("div");
 
-  v([el, { id: "test-id" }, [["span", "Test Text 1"], "Test Text 2", ["span", "Test Text 3"]]]);
+  v([el, { id: "test-id" }, [["<span>", "Test Text 1"], "Test Text 2", ["<span>", "Test Text 3"]]]);
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");
@@ -139,7 +139,7 @@ QUnit.test("apply children as virtual nodes arrays and texts", function(assert) 
 QUnit.test("apply attrs and children by array", function(assert) {
   var el = document.createElement("div");
 
-  v([el, { id: "test-id" }, [["span", "Test Text 1"], ["span", "Test Text 2"]]]);
+  v([el, { id: "test-id" }, [["<span>", "Test Text 1"], ["<span>", "Test Text 2"]]]);
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");
@@ -153,7 +153,7 @@ QUnit.test("apply attrs and children by array", function(assert) {
 QUnit.test("apply children recursive", function(assert) {
   var el = document.createElement("div");
 
-  v(el, { id: "test-id" }, [["div", [["span", "Test Text 1"], ["span", "Test Text 2"]]]]);
+  v(el, { id: "test-id" }, ["<div>", [["<span>", "Test Text 1"], ["<span>", "Test Text 2"]]]);
 
   assert.ok(el.v, "vdom element is created" );
   assert.equal(el.getAttribute("id"), "test-id", "id attribute");

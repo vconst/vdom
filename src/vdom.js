@@ -8,19 +8,21 @@ var v = window.v = function(selector, attrs, children) {
 		selector = selector[0];
 	}
 
+	if(attrs instanceof window.Array || typeof attrs === "string") {
+		children = attrs;
+		attrs = undefined;
+	}
+
 	if(selector instanceof v) {
-		selector.init(selector.node, attrs, children);
+		if(attrs || children) {
+			selector.init(selector.node, attrs, children);
+		}
 		return selector;
 	}
 
 	if(selector instanceof Element && selector.v) {
 		selector.v.init(selector, attrs, children);
 		return selector.v;
-	}
-
-	if(attrs instanceof window.Array || typeof attrs === "string") {
-		children = attrs;
-		attrs = undefined;
 	}
 
 	return new v.fn.init(selector, attrs, children);
@@ -70,12 +72,21 @@ v.fn = v.prototype = {
 			this.node.v = this;
 			this.apply();
 		}
-		else {
+		else if(typeof selector === "string"){
 			this.tagName = selector;
+		}
+		else {
+			throw new Error("Wrong selector type");
 		}
 	},
 	build: function() {
-		this.node = document.createElement(this.tagName);
+		var tagName = this.tagName;
+		if(tagName[0] === '<' && tagName[tagName.length - 1] === '>') {
+			this.node = document.createElement(tagName.slice(1, -1));
+		}
+		else {
+			this.node = document.createTextNode(tagName);
+		}
 		this.node.v = this;
 		this.apply();
 	},
@@ -94,24 +105,21 @@ v.fn = v.prototype = {
 				this.node.setAttribute(name, attrValue);
 			}
 		}
-		this.node.textContent = "";
+		if(this.node.nodeName !== "#text") {
+			this.node.textContent = "";
+		}
 		if(children) {
 			if(!(children instanceof window.Array)) {
 				children = [children];
 			}
+			if(children[0] && children[0][0] === "<") {
+				children = [children];
+			}
 			for(var i = 0; i < children.length; i++) {
-				var vNode = children[i];
-				if(vNode instanceof window.Array && typeof vNode[0] === "string") {
-					vNode = v(vNode);
-				}
-				if(vNode instanceof v) {
-					vNode.build();
-					this.node.appendChild(vNode.node);
-				}
-				else if(typeof vNode === "string") {
-					var node = document.createTextNode(vNode);
-					this.node.appendChild(node);
-				}
+				var vNode = v(children[i]);
+
+				vNode.build();
+				this.node.appendChild(vNode.node);
 			}
 		}
 	}
