@@ -267,4 +267,54 @@ QUnit.test("render table performance", function(assert) {
 	assert.ok(true, "native js full time - " + (new Date() - startDate));
 });
 
+QUnit.test("render list performance", function(assert) {
+	var items = [];
+	var itemCount = 10000;
+  
+	for(var rowIndex = 0; rowIndex < itemCount; rowIndex++) {
+		items.push(["<li>", "test " + rowIndex]);
+	}
+	
+	var container = document.createElement("div");
+	container.style.visibility = "hidden";
+	document.body.appendChild(container);
+
+	var startDate = new Date();
+	var date = startDate;
+	
+	var vList= v("<ul>", items);
+	assert.ok(true, "initialization time - " + (new Date() - date));
+	
+	
+	date = new Date();
+	v(container, vList);
+	assert.ok(true, "render time - " + (new Date() - date));
+	
+	date = new Date();
+	container.clientWidth;
+	assert.ok(true, "reflow time - " + (new Date() - date));
+	assert.ok(true, "full time - " + (new Date() - startDate));
+
+
+
+	container.textContent = "";
+	container.clientWidth;
+
+	startDate = new Date();
+	date = startDate;
+	var list = document.createElement("ul");
+	container.appendChild(list);
+	for(var rowIndex = 0; rowIndex < itemCount; rowIndex++) {
+		var item = document.createElement("li");
+		item.textContent = "test " + rowIndex;
+		list.appendChild(item);
+	}
+	assert.ok(true, "native js render time - " + (new Date() - date));
+
+	date = new Date();
+	container.clientWidth;
+	assert.ok(true, "native js reflow time - " + (new Date() - date));
+	assert.ok(true, "native js full time - " + (new Date() - startDate));
+});
+
 })();
