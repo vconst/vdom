@@ -80,7 +80,6 @@ function getNodeHashCode(vNode) {
 	}
 
 	if(textContent) {
-		hash ^= getStrHashCode(textContent);
 		hash ^= getStrHashCode(":" + textContent);
 	}
 	
@@ -95,8 +94,11 @@ function getNodeHashCode(vNode) {
 v.fn = v.prototype = {
 	version: "0.1.0",
 	init: function(selector, attrs, children) {
+		this.prevChildren = this.children;
 		this.attrs = attrs;
-		this.children = children;
+		if(children) {
+			this.children = children.slice ? children.slice(0) : children;
+		}
 
 		if(selector instanceof Element) {
 			//this.tagName = selector.tagName;
@@ -106,7 +108,12 @@ v.fn = v.prototype = {
 			this.apply();
 		}
 		else if(typeof selector === "string"){
-			this.tagName = selector;
+			if(selector[0] === '<' && selector[selector.length - 1] === '>') {
+				this.tagName = selector.slice(1, -1);
+			}
+			else {
+				this.textContent = selector;
+			}
 			this.normalize();
 		}
 		else {
@@ -116,11 +123,13 @@ v.fn = v.prototype = {
 	build: function() {
 		var tagName = this.tagName;
 			
-		if(tagName[0] === '<' && tagName[tagName.length - 1] === '>') {
-			this.node = document.createElement(tagName.slice(1, -1));
-		}
-		else {
-			this.node = document.createTextNode(tagName);
+		if(!this.node) {
+			if(this.tagName) {
+				this.node = document.createElement(this.tagName);
+			}
+			else {
+				this.node = document.createTextNode(this.textContent);
+			}
 		}
 		this.node.v = this;
 		this.apply();
@@ -156,33 +165,51 @@ v.fn = v.prototype = {
 				children[i].normalize();
 			}
 		}
-		this.hashCode = getNodeHashCode(this);
+		//this.hashCode = getNodeHashCode(this);
 	},
 	apply: function() {
 		var attrs = this.attrs,
-			children = this.children,
-			textContent = this.textContent;
+			prevChildren = this.prevChildren || [],
+			children = this.children || [],
+			childrenCount = Math.max(prevChildren.length, children.length),
+			textContent = this.textContent || "";
 
 		if(attrs) {
 			for(var name in attrs) {
 				this.node.setAttribute(name, attrs[name]);
 			}
 		}
-		
-		if(this.node.nodeName !== "#text") {
-			this.node.textContent = "";
-		}
 
-		if(textContent) {
+		if(!childrenCount && this.prevTextContent !== textContent) {
 			this.node.textContent = textContent;
 		}
-		
-		if(children) {
-			for(var i = 0; i < children.length; i++) {
-				var vNode = children[i];
 
+		this.prevChildren = undefined;
+		
+		for(var i = 0; i < childrenCount; i++) {
+			var vNode = children[i];
+			var prevVNode = prevChildren[i];
+			
+			if(!vNode) {
+				prevVNode.node.parentNode.removeChild(prevVNode.node);
+			}
+			else if(!prevVNode) {
 				vNode.build();
 				this.node.appendChild(vNode.node);
+			}
+			else if(prevVNode.tagName !== vNode.tagName) {
+				vNode.build();
+				prevVNode.node.parentNode.replaceChild(vNode.node, prevVNode.node);
+			}
+			else /*if(prevVNode.hashCode !== vNode.hashCode)*/{
+				children[i] = prevVNode;
+				prevVNode.attrs = vNode.attrs;
+				prevVNode.prevChildren = prevVNode.children;
+				prevVNode.children = vNode.children;
+				prevVNode.prevTextContent = prevVNode.textContent;
+				prevVNode.textContent = vNode.textContent;
+				prevVNode.hashCode = vNode.hashCode;
+				prevVNode.apply();
 			}
 		}
 	}
