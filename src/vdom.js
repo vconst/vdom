@@ -129,7 +129,6 @@ v.fn = v.prototype = {
 			//this.tagName = selector.tagName;
 			this.node = selector;
 			this.node.v = this;
-			this.normalize();
 			this.apply();
 		}
 		else if(typeof selector === "string"){
@@ -139,7 +138,6 @@ v.fn = v.prototype = {
 			else {
 				this.textContent = selector;
 			}
-			this.normalize();
 		}
 		else {
 			throw new Error("Wrong selector type");
@@ -160,8 +158,7 @@ v.fn = v.prototype = {
 		this.apply();
 	},
 	normalize: function() {
-		var attrs = this.attrs,
-			children = this.children;
+		var children = this.children;
 		
 		if(children) {
 			if(!(children instanceof window.Array)) {
@@ -177,12 +174,13 @@ v.fn = v.prototype = {
 			this.children = children;
 			for(var i = 0; i < children.length; i++) {
 				children[i] = v(children[i]);
-				children[i].normalize();
 			}
 		}
 		//this.hashCode = getNodeHashCode(this);
 	},
 	apply: function() {
+		this.normalize();
+
 		var attrs = this.attrs,
 			prevAttrs = this.prevAttrs,
 			prevChildren = this.prevChildren || [],
@@ -229,6 +227,7 @@ v.fn = v.prototype = {
 			}
 			else /*if(prevVNode.hashCode !== vNode.hashCode)*/{
 				children[i] = prevVNode;
+				
 				prevVNode.prevAttrs = prevVNode.attrs;
 				prevVNode.prevChildren = prevVNode.children;
 				prevVNode.prevTextContent = prevVNode.textContent;
