@@ -294,6 +294,31 @@ QUnit.test("remove text from node", function(assert) {
   assert.equal(el.innerHTML, "<span>Test Text 1</span>Test Text 2<span></span>", "inner html");
 });
 
+QUnit.test("apply event on virtual dom element", function(assert) {
+  var el = document.createElement("div");
+  
+  var clickCount = 0;
+
+  v(el, { onclick: function() { clickCount++; } });
+  
+  el.dispatchEvent(  new MouseEvent("click"));
+
+  assert.equal(clickCount, 1, "click count" );
+});
+
+QUnit.test("apply event on dom element several times", function(assert) {
+  var el = document.createElement("div");
+  
+  var clickCount = 0;
+
+  v(el, { onclick: function() { clickCount++; } });
+
+  v(el, { onclick: function() { clickCount++; } });
+  
+  el.dispatchEvent(  new MouseEvent("click"));
+
+  assert.equal(clickCount, 1, "click count" );
+});
 
 QUnit.module("Performance");
 
@@ -305,7 +330,10 @@ QUnit.test("render table performance", function(assert) {
 	for(var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
 		rows.push(["<tr>", []]);
 		for(var columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-			rows[rowIndex][1].push(["<td>", /*{ class: "cell" }, */"Test " + rowIndex + " " + columnIndex]);
+			rows[rowIndex][1].push(["<td>", 
+			{ onclick: function() {}, class: "cell", style: { "text-align": "center" } }, 
+			//{ class: "cell" },
+			"Test " + rowIndex + " " + columnIndex]);
 		}
 	}
 	
@@ -340,7 +368,9 @@ QUnit.test("render table performance", function(assert) {
 	
 	
 	date = new Date();
+	//console.profile("update render");
 	var vContainer = v(container, vTable);
+	//console.profileEnd();
 	assert.ok(true, "update render time - " + (new Date() - date));
 	
 	date = new Date();
@@ -366,7 +396,9 @@ QUnit.test("render table performance", function(assert) {
 		for(var columnIndex = 0; columnIndex < columnCount; columnIndex++) {
 			var cell = document.createElement("td");
 			cell.textContent = "Test " + rowIndex + " " + columnIndex;
-			//cell.className = "cell";
+			cell.addEventListener("click", function() {});
+			cell.className = "cell";
+			cell.style.textAlign = "center";
 			row.appendChild(cell);
 		}
 	}
