@@ -61,6 +61,12 @@ v.attrHooks = {
 		if(!vNode.prevChildren && vNode.children && !value) {
 			vNode.children = [];
 		}
+	},
+	"html": function(vNode, value) {
+		vNode.node.innerHTML = value;
+	},
+	"text": function(vNode, value) {
+		vNode.textContent = value;
 	}
 };
 

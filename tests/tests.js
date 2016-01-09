@@ -331,6 +331,22 @@ QUnit.test("apply visible hook on dom element", function(assert) {
   assert.equal(el.childNodes.length, 2, "children count");
 });
 
+QUnit.test("apply html hook on dom element", function(assert) {
+  var el = document.createElement("div");
+
+  v(el, { html: "<span>Test Text</span>" });
+
+  assert.equal(el.innerHTML, "<span>Test Text</span>", "element innerHTML");
+});
+
+QUnit.test("apply text hook on dom element", function(assert) {
+  var el = document.createElement("div");
+
+  v(el, { text: "<span>Test Text</span>" });
+
+  assert.equal(el.textContent, "<span>Test Text</span>", "element textContent");
+});
+
 QUnit.module("Performance");
 
 QUnit.test("render table performance", function(assert) {
