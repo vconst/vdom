@@ -29,7 +29,7 @@ var v = window.v = function(selector, attrs, children) {
 };
 
 function compileComplexAttrHook(delimiter, parameterSerializer, setter) {
-	return function(node, value, prevValue) {
+	return function(vNode, value, prevValue) {
 		var result = value;
 		if(isObject(value)) {
 			result = [];
@@ -41,7 +41,7 @@ function compileComplexAttrHook(delimiter, parameterSerializer, setter) {
 			result = result.join(delimiter);
 		}
 		if(result !== prevValue) {
-			setter(node, result);
+			setter(vNode.node, result);
 			return result;
 		}
 	};
@@ -55,7 +55,13 @@ v.attrHooks = {
 	"style": compileComplexAttrHook("; ", 
 		function(name, value) { return name + ": " + value; }, 
 		function(node, value) { node.style.cssText = value || ""; }
-	)
+	),
+	"visible": function(vNode, value) {
+		vNode.node.style.display = value ? "" : "none";
+		if(!vNode.prevChildren && vNode.children && !value) {
+			vNode.children = [];
+		}
+	}
 };
 
 function eventHook(node, name, value, prevValue) {
@@ -174,11 +180,7 @@ v.fn = v.prototype = {
 		this.normalize();
 
 		var attrs = this.attrs,
-			prevAttrs = this.prevAttrs,
-			prevChildren = this.prevChildren || [],
-			children = this.children || [],
-			childrenCount = Math.max(prevChildren.length, children.length),
-			textContent = this.textContent;
+			prevAttrs = this.prevAttrs;
 
 		if(attrs) {
 			for(var name in attrs) {
@@ -188,13 +190,18 @@ v.fn = v.prototype = {
 					eventHook(this.node, name, value, prevValue);
 				}
 				else if(v.attrHooks[name]){
-					attrs[name] = v.attrHooks[name](this.node, value, prevValue);
+					attrs[name] = v.attrHooks[name](this, value, prevValue);
 				}
 				else {
 					this.node.setAttribute(name, value);
 				}
 			}
 		}
+		
+		var prevChildren = this.prevChildren || [],
+			children = this.children || [],
+			childrenCount = Math.max(prevChildren.length, children.length),
+			textContent = this.textContent;
 
 		if(!childrenCount && this.prevTextContent !== textContent) {
 			this.node.textContent = textContent;

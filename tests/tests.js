@@ -312,6 +312,25 @@ QUnit.test("vNode from node", function(assert) {
   assert.equal(vNode.children[1].textContent, "Test Text 2", "children 2 textContent");
 });
 
+QUnit.test("apply visible hook on dom element", function(assert) {
+  var el = document.createElement("div");
+
+  v(el, { visible: false }, [["<div>"], ["<div>"]]);
+
+  assert.equal(el.style.display, "none", "element is hidden");
+  assert.equal(el.childNodes.length, 0, "children count");
+
+  v(el, { visible: true }, [["<div>"], ["<div>"]]);
+  
+  assert.equal(el.style.display, "", "element is visible");
+  assert.equal(el.childNodes.length, 2, "children count");
+
+  v(el, { visible: false }, [["<div>"], ["<div>"]]);
+
+  assert.equal(el.style.display, "none", "element is hidden");
+  assert.equal(el.childNodes.length, 2, "children count");
+});
+
 QUnit.module("Performance");
 
 QUnit.test("render table performance", function(assert) {
