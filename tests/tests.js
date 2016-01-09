@@ -347,6 +347,15 @@ QUnit.test("apply text hook on dom element", function(assert) {
   assert.equal(el.textContent, "<span>Test Text</span>", "element textContent");
 });
 
+QUnit.test("apply attr hook on dom element", function(assert) {
+  var el = document.createElement("div");
+
+  v(el, { attr: { id: "test-id", "data-test": "test" } });
+
+  assert.equal(el.getAttribute("id"), "test-id", "element id attribute");
+  assert.equal(el.getAttribute("data-test"), "test", "element data-test attribute");
+});
+
 QUnit.module("Performance");
 
 QUnit.test("render table performance", function(assert) {
