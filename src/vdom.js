@@ -79,7 +79,7 @@ function fetch(vNode) {
 	var i,
 		attributes,
 		childNodes;
-		debugger;
+
 	if(!vNode.attrs) {
 		attributes = vNode.node.attributes || [];
 		vNode.attrs = {};
