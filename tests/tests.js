@@ -179,36 +179,6 @@ QUnit.test("apply children recursive", function(assert) {
   assert.equal(el.childNodes[0].childNodes[1].textContent, "Test Text 2", "children node 2 text");
 });
 
-QUnit.skip("hashCode for simple node", function(assert) {
-  assert.ok(v("<div>").hashCode > 0, "hashCode is positive number");
-  
-  assert.equal(v("<div>").hashCode, v("<div>").hashCode, "hashCodes for equal tagName");
-  assert.notEqual(v("<div>").hashCode, v("<span>").hashCode, "hashCodes for not equal tagName");
-  
-  assert.equal(v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, 
-               v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, "hashCodes for equal attributes id, class, style");
-
-  assert.notEqual(v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, 
-                  v("<div>", { id: "test2", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, "hashCodes for not equal id attribute");
-  
-  assert.notEqual(v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, 
-                  v("<div>", { id: "test1", style: { display: "none", width: "200px" }, class: { test1: true, test2: true } }).hashCode, "hashCodes for not equal style attribute");
-
-  assert.notEqual(v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: true } }).hashCode, 
-                  v("<div>", { id: "test1", style: { display: "none", width: "100px" }, class: { test1: true, test2: false } }).hashCode, "hashCodes for not equal class attribute");
-});
-
-QUnit.skip("hashCode for node with children", function(assert) {
-  assert.equal(v("<div>", "Test1").hashCode, v("<div>", "Test1").hashCode, "hashCodes for equal text content");
-  assert.notEqual(v("<div>", "Test1").hashCode, v("<span>", "Test2").hashCode, "hashCodes for not equal text content");
-
-  assert.equal(v("<div>", [["<span>", "Test1"], ["<span>", "Test2"]]).hashCode, v("<div>", [["<span>", "Test1"], ["<span>", "Test2"]]).hashCode, "hashCodes for equal children");
-  assert.notEqual(v("<div>", [["<span>", "Test1"], ["<span>", "Test2"]]).hashCode, v("<div>", [["<span>", "Test1"]]).hashCode, "hashCodes for not equal children count");
-  assert.notEqual(v("<div>", [["<span>", "Test1"], ["<span>", "Test2"]]).hashCode, v("<div>", [["<span>", "Test2"], ["<span>", "Test1"]]).hashCode, "hashCodes for not equal children order");
-  assert.notEqual(v("<div>", [["<span>", "Test1"], ["<span>", "Test2"]]).hashCode, v("<div>", [["<span>", "Test1"], ["<span>", "Test3"]]).hashCode, "hashCodes for not equal children text content");
-  assert.notEqual(v("<div>", ["<div>", ["<span>", "Test1"]]).hashCode, v("<div>", ["<div>", ["<span>", "Test2"]]).hashCode, "hashCodes for not equal children recursive");
-});
-
 QUnit.test("update textContent in children", function(assert) {
   var el = document.createElement("div");
 

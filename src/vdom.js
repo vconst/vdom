@@ -75,44 +75,6 @@ function isObject(obj) {
 	return Object.getPrototypeOf(obj) === Object.prototype;
 }
 
-function getStrHashCode(str){
-    // 1315423911=b'1001110011001111100011010100111'
-    var hash = 1315423911,
-		i,
-		ch;
-		
-    for (i = str.length - 1; i >= 0; i--) {
-        ch = str.charCodeAt(i);
-        hash ^= ((hash << 5) + ch + (hash >> 2));
-    }
-
-    return (hash & 0x7FFFFFFF);
-}
-
-function getNodeHashCode(vNode) {
-	var attrs = vNode.attrs,
-		children = vNode.children,
-		textContent = vNode.textContent || "",
-		hash = getStrHashCode(vNode.tagName || "");
-	
-	if(attrs) {
-		for(var name in attrs) {
-			hash ^= getStrHashCode(name + ":" + attrs[name]);
-		}
-	}
-
-	if(textContent) {
-		hash ^= getStrHashCode(":" + textContent);
-	}
-	
-	if(children) {
-		for(var index  = 0; index < children.length; index++) {
-			hash ^= getStrHashCode(index + ":" + children[index].hashCode);
-		}
-	}
-	return hash;
-}
-
 function fetch(vNode) {
 	var i,
 		attributes,
@@ -207,7 +169,6 @@ v.fn = v.prototype = {
 				children[i] = v(children[i]);
 			}
 		}
-		//this.hashCode = getNodeHashCode(this);
 	},
 	apply: function() {
 		this.normalize();
@@ -256,7 +217,7 @@ v.fn = v.prototype = {
 				vNode.build();
 				prevVNode.node.parentNode.replaceChild(vNode.node, prevVNode.node);
 			}
-			else /*if(prevVNode.hashCode !== vNode.hashCode)*/{
+			else {
 				children[i] = prevVNode;
 				
 				prevVNode.prevAttrs = prevVNode.attrs;
@@ -266,7 +227,6 @@ v.fn = v.prototype = {
 				prevVNode.attrs = vNode.attrs;
 				prevVNode.children = vNode.children;
 				prevVNode.textContent = vNode.textContent;
-				//prevVNode.hashCode = vNode.hashCode;
 				prevVNode.apply();
 			}
 		}
