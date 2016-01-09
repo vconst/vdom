@@ -320,6 +320,28 @@ QUnit.test("apply event on dom element several times", function(assert) {
   assert.equal(clickCount, 1, "click count" );
 });
 
+QUnit.test("vNode from node", function(assert) {
+  var el = document.createElement("div");
+  var child1 = document.createElement("span");
+  child1.textContent = "Test Text 1";
+  el.appendChild(child1);
+  var child2 = document.createElement("span");
+  child2.textContent = "Test Text 2";
+  el.appendChild(child2);
+  el.id = "test-id";
+  el.style.width = "100px";
+
+  var vNode = v(el);
+
+  assert.equal(vNode.tagName, "DIV", "root tagName");
+  assert.deepEqual(vNode.attrs, { style: "width: 100px;", id: "test-id" }, "root attrs");
+  assert.equal(vNode.children.length, 2, "root children count");
+  assert.equal(vNode.children[0].tagName, "SPAN", "children 1 tagName");
+  assert.equal(vNode.children[0].textContent, "Test Text 1", "children 1 textContent");
+  assert.equal(vNode.children[1].tagName, "SPAN", "children 2 tagName");
+  assert.equal(vNode.children[1].textContent, "Test Text 2", "children 2 textContent");
+});
+
 QUnit.module("Performance");
 
 QUnit.test("render table performance", function(assert) {

@@ -113,6 +113,36 @@ function getNodeHashCode(vNode) {
 	return hash;
 }
 
+function fetch(vNode) {
+	var i,
+		attributes,
+		childNodes;
+		debugger;
+	if(!vNode.attrs) {
+		attributes = vNode.node.attributes || [];
+		vNode.attrs = {};
+		for(i = 0; i < attributes.length; i++) {
+			vNode.attrs[attributes[i].name] = attributes[i].value;
+		}
+	}
+	if(!vNode.children) {
+		vNode.children = [];
+		if(!vNode.node.tagName) {
+			vNode.textContent = vNode.node.textContent;
+		}
+		else {
+			childNodes = vNode.node.childNodes;
+			for(i = 0; i < childNodes.length; i++) {
+				vNode.children.push(v(childNodes[i]));
+			}
+			if(vNode.children.length === 1 && !vNode.children[0].tagName) {
+				vNode.textContent = vNode.children[0].textContent;
+				vNode.children = [];
+			}
+		}
+	}
+}
+
 v.fn = v.prototype = {
 	version: "0.1.0",
 	init: function(selector, attrs, children) {
@@ -125,11 +155,12 @@ v.fn = v.prototype = {
 			this.children = children.slice ? children.slice(0) : children;
 		}
 
-		if(selector instanceof Element) {
-			//this.tagName = selector.tagName;
+		if(selector instanceof Element || selector instanceof Text) {
+			this.tagName = selector.tagName;
 			this.node = selector;
 			this.node.v = this;
 			this.apply();
+			fetch(this);
 		}
 		else if(typeof selector === "string"){
 			if(selector[0] === '<' && selector[selector.length - 1] === '>') {
@@ -186,7 +217,7 @@ v.fn = v.prototype = {
 			prevChildren = this.prevChildren || [],
 			children = this.children || [],
 			childrenCount = Math.max(prevChildren.length, children.length),
-			textContent = this.textContent || "";
+			textContent = this.textContent;
 
 		if(attrs) {
 			for(var name in attrs) {
