@@ -56,17 +56,33 @@ v.attrHooks = {
 		function(name, value) { return name + ": " + value; }, 
 		function(node, value) { node.style.cssText = value || ""; }
 	),
-	"visible": function(vNode, value) {
-		vNode.node.style.display = value ? "" : "none";
+	"visible": function(vNode, value, prevValue) {
+		if(value !== prevValue) {
+			vNode.node.style.display = value ? "" : "none";
+		}
 		if(!vNode.prevChildren && vNode.children && !value) {
 			vNode.children = [];
 		}
 	},
-	"html": function(vNode, value) {
-		vNode.node.innerHTML = value;
+	"html": function(vNode, value, prevValue) {
+		if(value !== prevValue) {
+			vNode.node.innerHTML = value;
+		}
 	},
-	"text": function(vNode, value) {
-		vNode.textContent = value;
+	"text": function(vNode, value, prevValue) {
+		if(value !== prevValue) {
+			vNode.textContent = value;
+		}
+	},
+	"attr": function(vNode, value, prevValue) {
+		value = value || {};
+		prevValue = prevValue || {};
+
+		for(var name in value) {
+			if(value[name] !== prevValue[name]) {
+				vNode.node.setAttribute(name, value[name]);
+			}
+		}
 	}
 };
 
@@ -197,6 +213,9 @@ v.fn = v.prototype = {
 				}
 				else if(v.attrHooks[name]){
 					attrs[name] = v.attrHooks[name](this, value, prevValue);
+					if(attrs[name] === undefined) {
+						attrs[name] = value;
+					}
 				}
 				else {
 					this.node.setAttribute(name, value);
