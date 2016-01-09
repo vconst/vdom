@@ -83,12 +83,18 @@ v.attrHooks = {
 				vNode.node.setAttribute(name, value[name]);
 			}
 		}
+	},
+	"event": function(vNode, value, prevValue) {
+		value = value || {};
+		prevValue = prevValue || {};
+
+		for(var name in value) {
+			eventHook(vNode.node, name, value[name], prevValue[name]);
+		}
 	}
 };
 
-function eventHook(node, name, value, prevValue) {
-	var eventType = name.substr(2);
-
+function eventHook(node, eventType, value, prevValue) {
 	if(prevValue !== value) {
 		if(prevValue) {
 			node.removeEventListener(eventType, prevValue);
@@ -209,7 +215,7 @@ v.fn = v.prototype = {
 				var value = attrs[name];
 				var prevValue = prevAttrs && prevAttrs[name];
 				if(name.length > 2 && name.indexOf("on") === 0) {
-					eventHook(this.node, name, value, prevValue);
+					eventHook(this.node, name.substr(2), value, prevValue);
 				}
 				else if(v.attrHooks[name]){
 					attrs[name] = v.attrHooks[name](this, value, prevValue);

@@ -356,6 +356,22 @@ QUnit.test("apply attr hook on dom element", function(assert) {
   assert.equal(el.getAttribute("data-test"), "test", "element data-test attribute");
 });
 
+QUnit.test("apply event hook on virtual dom element", function(assert) {
+  var el = document.createElement("div");
+  
+  var clickCount = 0;
+  var mousedownCount = 0;
+
+  v(el, { event: { click: function() { clickCount++; }, mousedown: function() { mousedownCount++; } }});
+  
+  el.dispatchEvent(new MouseEvent("click"));
+  el.dispatchEvent(new MouseEvent("mousedown"));
+
+  assert.equal(clickCount, 1, "click count" );
+  assert.equal(mousedownCount, 1, "mousedown count" );
+});
+
+
 QUnit.module("Performance");
 
 QUnit.test("render table performance", function(assert) {
