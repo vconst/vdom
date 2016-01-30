@@ -228,6 +228,78 @@ QUnit.test("add node in children to middle", function(assert) {
   assert.equal(el.innerHTML, "<span>Test Text 1</span>Test Text 2<div>Test Text 4</div><span>Test Text 3</span>", "inner html");
 });
 
+QUnit.test("add node in children to start when key is not used", function(assert) {
+  var el = document.createElement("div");
+
+  v([el, [["<span>", "Test Text 1"], ["<span>", "Test Text 2"]]]);
+  var v0 = el.childNodes[0].v;
+  var v1 = el.childNodes[1].v;
+  
+  v([el, [["<span>", "Test Text 0"], ["<span>", "Test Text 1"], ["<span>", "Test Text 2"]]]);
+
+  assert.ok(el.v, "vdom element is created" );
+  assert.equal(el.childNodes.length, 3, "children count");
+  assert.equal(el.childNodes[0].v, v0, "vNode instance is not changed for first node");
+  assert.equal(el.childNodes[1].v, v1, "vNode instance is not changed for second node");
+  assert.equal(el.innerHTML, "<span>Test Text 0</span><span>Test Text 1</span><span>Test Text 2</span>", "inner html");
+});
+
+QUnit.test("add node in children to start when key is used", function(assert) {
+  var el = document.createElement("div");
+
+  v([el, [["<span>", { key: 1 }, "Test Text 1"], ["<span>", { key: 2 }, "Test Text 2"]]]);
+  var v0 = el.childNodes[0].v;
+  var v1 = el.childNodes[1].v;
+  
+  v([el, [["<span>", { key: 0 }, "Test Text 0"], ["<span>", { key: 1 }, "Test Text 1"], ["<span>", { key: 2 }, "Test Text 2"]]]);
+
+  assert.ok(el.v, "vdom element is created" );
+  assert.equal(el.childNodes.length, 3, "children count");
+  assert.equal(el.childNodes[1].v, v0, "vNode instance is moved for first node to second");
+  assert.equal(el.childNodes[2].v, v1, "vNode instance is moved for second node to third");
+  assert.equal(el.innerHTML, "<span>Test Text 0</span><span>Test Text 1</span><span>Test Text 2</span>", "inner html");
+});
+
+QUnit.test("reorder nodes in children when key is used", function(assert) {
+  var el = document.createElement("div");
+
+  v([el, [["<span>", { key: 0 }, "Test Text 0"], ["<span>", { key: 1 }, "Test Text 1"], ["<span>", { key: 2 }, "Test Text 2"]]]);
+  var v0 = el.childNodes[0].v;
+  var v1 = el.childNodes[1].v;
+  var v2 = el.childNodes[2].v;
+  
+  v([el, [["<span>", { key: 2 }, "Test Text 2"], ["<span>", { key: 1 }, "Test Text 1"], ["<span>", { key: 0 }, "Test Text 0"]]]);
+
+  assert.ok(el.v, "vdom element is created" );
+  assert.equal(el.childNodes.length, 3, "children count");
+  assert.equal(el.childNodes[0].v, v2, "vNode 0 equal prev vNode 2");
+  assert.equal(el.childNodes[1].v, v1, "vNode 1 equal prev vNode 1");
+  assert.equal(el.childNodes[2].v, v0, "vNode 2 equal prev vNode 0");
+  assert.equal(el.innerHTML, "<span>Test Text 2</span><span>Test Text 1</span><span>Test Text 0</span>", "inner html");
+});
+
+QUnit.test("reorder nodes random in children when key is used", function(assert) {
+  var el = document.createElement("div");
+
+  v([el, [["<span>", { key: 0 }, "Test Text 0"], ["<span>", { key: 1 }, "Test Text 1"], ["<span>", { key: 2 }, "Test Text 2"], ["<span>", { key: 3 }, "Test Text 3"]]]);
+  var v0 = el.childNodes[0].v;
+  var v1 = el.childNodes[1].v;
+  var v2 = el.childNodes[2].v;
+  var v3 = el.childNodes[3].v;
+  
+  v([el, [["<span>", { key: 0 }, "Test Text 0"], ["<span>", { key: 3 }, "Test Text 3"], ["<span>", { key: 2 }, "Test Text 2"], ["<span>", { key: 1 }, "Test Text 1"]]]);
+
+  assert.ok(el.v, "vdom element is created" );
+  assert.equal(el.childNodes.length, 4, "children count");
+  assert.equal(el.childNodes[0].v, v0, "vNode 0 equal prev vNode 0");
+  assert.equal(el.childNodes[1].v, v3, "vNode 1 equal prev vNode 3");
+  assert.equal(el.childNodes[2].v, v2, "vNode 2 equal prev vNode 2");
+  assert.equal(el.childNodes[3].v, v1, "vNode 2 equal prev vNode 1");
+  assert.equal(el.innerHTML, "<span>Test Text 0</span><span>Test Text 3</span><span>Test Text 2</span><span>Test Text 1</span>", "inner html");
+});
+
+
+
 QUnit.test("remove node in children from end", function(assert) {
   var el = document.createElement("div");
 
@@ -370,85 +442,6 @@ QUnit.test("apply event hook on virtual dom element", function(assert) {
   assert.equal(clickCount, 1, "click count" );
   assert.equal(mousedownCount, 1, "mousedown count" );
 });
-
-QUnit.test("applyBindings foreach/if/text/attr", function(assert) {
-  var el = document.getElementById("qunit-fixture");
-  
-  el.innerHTML = '<ul class="list" data-bind="foreach: items"><li class="list-item" data-bind="if: visible, attr: { id: \'list-item-\' + caption }"><span class="list-item-caption" data-bind="text: caption"></span>: <span class="list-item-content" data-bind="text: text"></li></ul>'
-  
-  v.applyBindings({ items: [{ caption: "1", text: "text 1", visible: true }, { caption: "2", text: "text 2", visible: false }, { caption: "3", text: "text 3", visible: true }] }, el);
-  
-  assert.equal(el.innerHTML, 
-	"<ul class=\"list\" data-bind=\"foreach: items\">" + 
-		"<li class=\"list-item\" data-bind=\"if: visible, attr: { id: 'list-item-' + caption }\" id=\"list-item-1\">" + 
-			"<span class=\"list-item-caption\" data-bind=\"text: caption\">1</span>: <span class=\"list-item-content\" data-bind=\"text: text\">text 1</span>" + 
-		"</li>" + 
-		"<li class=\"list-item\" data-bind=\"if: visible, attr: { id: 'list-item-' + caption }\" id=\"list-item-3\">" + 
-			"<span class=\"list-item-caption\" data-bind=\"text: caption\">3</span>: <span class=\"list-item-content\" data-bind=\"text: text\">text 3</span>" + 
-		"</li>" + 
-	"</ul>");
-	
-	v.applyBindings({ items: [] }, el);
-	
-  assert.equal(el.innerHTML, 
-	"<ul class=\"list\" data-bind=\"foreach: items\">" + 
-	"</ul>");
-	
-});
-
-QUnit.test("applyBindings perfomance", function(assert) {
-	var viewModel = { items: [] };
-	
-    var el = document.createElement("div");
-	
-	document.body.appendChild(el);
-  
-    el.innerHTML = '<ul id="v-list" data-bind="foreach: items"><li>v: <span data-bind="text: val"></span></li></ul>';
-	
-	var date = new Date();
-	v.applyBindings(viewModel, el);
-	assert.ok(true, new Date() - date);
-
-	date = new Date();
-	fill(10000);
-	el.clientWidth;
-	assert.ok(true, new Date() - date);
-
-	date = new Date();
-	update(10000);
-	el.clientWidth;
-	assert.ok(true, new Date() - date);
-
-	function fill(n) {
-		var i,
-			items = [];
-		for (i = 0; i < n; i += 1) {
-			items.push({
-				val: i
-			});
-		}
-		viewModel.items = items;
-		
-		v.applyBindings(viewModel, el);
-	}
-
-	function update(n) {
-		var i, 
-			item;
-		
-		for(var i = 0 ; i < n; i++) {
-			item = viewModel.items[i];
-			item.val = item.val + ' ' + item.val;
-		};
-
-		v.applyBindings(viewModel, el);
-	}
-	
-	//el.remove();
-	
-
-});
-
 
 QUnit.module("Performance");
 
@@ -600,5 +593,86 @@ QUnit.test("render list performance", function(assert) {
 	assert.ok(true, "native js reflow time - " + (new Date() - date));
 	assert.ok(true, "native js full time - " + (new Date() - startDate));
 });
+
+QUnit.module("knockout syntax");
+
+QUnit.test("applyBindings foreach/if/text/attr", function(assert) {
+  var el = document.getElementById("qunit-fixture");
+  
+  el.innerHTML = '<ul class="list" data-bind="foreach: items"><li class="list-item" data-bind="if: visible, attr: { id: \'list-item-\' + caption }"><span class="list-item-caption" data-bind="text: caption"></span>: <span class="list-item-content" data-bind="text: text"></li></ul>'
+  
+  v.applyBindings({ items: [{ caption: "1", text: "text 1", visible: true }, { caption: "2", text: "text 2", visible: false }, { caption: "3", text: "text 3", visible: true }] }, el);
+  
+  assert.equal(el.innerHTML, 
+	"<ul class=\"list\" data-bind=\"foreach: items\">" + 
+		"<li class=\"list-item\" data-bind=\"if: visible, attr: { id: 'list-item-' + caption }\" id=\"list-item-1\">" + 
+			"<span class=\"list-item-caption\" data-bind=\"text: caption\">1</span>: <span class=\"list-item-content\" data-bind=\"text: text\">text 1</span>" + 
+		"</li>" + 
+		"<li class=\"list-item\" data-bind=\"if: visible, attr: { id: 'list-item-' + caption }\" id=\"list-item-3\">" + 
+			"<span class=\"list-item-caption\" data-bind=\"text: caption\">3</span>: <span class=\"list-item-content\" data-bind=\"text: text\">text 3</span>" + 
+		"</li>" + 
+	"</ul>");
+	
+	v.applyBindings({ items: [] }, el);
+	
+  assert.equal(el.innerHTML, 
+	"<ul class=\"list\" data-bind=\"foreach: items\">" + 
+	"</ul>");
+	
+});
+
+QUnit.test("applyBindings perfomance", function(assert) {
+	var viewModel = { items: [] };
+	
+    var el = document.createElement("div");
+	
+	document.body.appendChild(el);
+  
+    el.innerHTML = '<ul id="v-list" data-bind="foreach: items"><li>v: <span data-bind="text: val"></span></li></ul>';
+	
+	var date = new Date();
+	v.applyBindings(viewModel, el);
+	assert.ok(true, new Date() - date);
+
+	date = new Date();
+	fill(10000);
+	el.clientWidth;
+	assert.ok(true, new Date() - date);
+
+	date = new Date();
+	update(10000);
+	el.clientWidth;
+	assert.ok(true, new Date() - date);
+
+	function fill(n) {
+		var i,
+			items = [];
+		for (i = 0; i < n; i += 1) {
+			items.push({
+				val: i
+			});
+		}
+		viewModel.items = items;
+		
+		v.applyBindings(viewModel, el);
+	}
+
+	function update(n) {
+		var i, 
+			item;
+		
+		for(var i = 0 ; i < n; i++) {
+			item = viewModel.items[i];
+			item.val = item.val + ' ' + item.val;
+		};
+
+		v.applyBindings(viewModel, el);
+	}
+	
+	//el.remove();
+	
+
+});
+
 
 })();
