@@ -3,149 +3,99 @@
 
 var v = window.v;
 
-v.bindingHandlers = {
-	"if": function(vNode, value) {
-		return !!value;
-	},
-	"ifnot": function(vNode, value) {
-		return !value;
-	},
-	"foreach": function(vNode, items, allBindings) {
-		var children = [],
-			childNode;
-			
-		if(vNode.children && items) {
-			for(var itemIndex = 0; itemIndex < items.length; itemIndex++) {
-				for(var childIndex = 0; childIndex < vNode.children.length; childIndex++) {
-					childNode = vNode.children[childIndex].clone();
-					childNode.$bindingContext = createBindingContext(items[itemIndex], vNode.$bindingContext, itemIndex);
-					children.push(childNode);
-				}
-			}
-		}
-		vNode.children = children;
-	},
-	"with": function(vNode, value, allBindings) {
-		var childNode;
-		
-		if(vNode.children) {
-			for(var index = 0; index < vNode.children.length; index++) {
-				childNode = vNode.children[index];
-				childNode.$bindingContext = createBindingContext(value, vNode.$bindingContext);
-			}
-		}
-	}
-};
-
-function createBindingContext(data, parentContext, index) {
-	return {
-			$parents: parentContext ? parentContext.$parents.concat(parentContext.$data) : [],
-			$root: parentContext ? parentContext.$root : data,
-			$parent: parentContext ? parentContext.$data : null,
-			$data: data,
-			$parentContext: parentContext,
-			$index: index
-		};
-}
-
-function extend(baseObj, obj) {
-	for(var name in obj) {
-		baseObj[name] = obj[name];
-	}
-	return baseObj;
-}
-
-function getBindingHandler(bindingName) {
-	var bindingHandler = v.bindingHandlers[bindingName];
-	if(!bindingHandler && v.attrHooks[bindingName]) {
-		bindingHandler = v.bindingHandlers[bindingName] = function(vNode, value) {
-			var attrs = vNode.attrs;
-			if(!vNode.templateAttrs) {
-				vNode.templateAttrs = attrs;
-				attrs = vNode.attrs = extend({}, attrs);
-			}
-			attrs[bindingName] = value;
-		}
-	}
-	return bindingHandler;
-}
-
-var bindingsCache = {};
-
-function getBindings(vNode, bindingContext) {
-	var dataBindString = vNode.attrs && vNode.attrs["data-bind"],
-	    bindingsGetter;
+function createBindingsString(vNode) {
+	var dataBindString = vNode.attrs && vNode.attrs["data-bind"];
 		
 	if(dataBindString) {
-		bindingsGetter = bindingsCache[dataBindString];
-		if(!bindingsGetter) {
-			bindingsGetter = bindingsCache[dataBindString] = new Function("$context", "with($context){with($data||{}){return{" + dataBindString + "}}}");
-		}
-		return bindingsGetter(bindingContext);
+		return "var bindings = (function($context) { with($context){with($data||{}){ return {" + dataBindString + "};}}})(context);\n";
 	}
+	return "";
 }
 
-function applyBindingsCore(template, data, bindingContext) {
-	var vNode = template.clone();
+function createTemplateChildren(children) {
+	var resultChildren = [];
 	
-	vNode.$template = template;
-	vNode.$bindingContext = bindingContext = template.$bindingContext || bindingContext || createBindingContext(data);
-	
-	var allBindings = getBindings(vNode, bindingContext),
-		bindingName,
-		bindingHandler;
-	
-	for(bindingName in allBindings) {
-		bindingHandler = getBindingHandler(bindingName);
-		
-		if(bindingHandler(vNode, allBindings[bindingName], allBindings) === false) {
-			return;
-		}
+	for(var i = 0; i < children.length; i++) {
+		resultChildren.push(createTemplateCore(children[i], true));
 	}
-
-	var children = vNode.children,
-		childNode;
-		
-	if(children) {
-		vNode.children = [];
-		for(var i = 0; i < children.length; i++) {
-			childNode = applyBindingsCore(children[i], bindingContext.$data, bindingContext);
-			if(childNode) {
-				vNode.children.push(childNode);
-			}
-		}
-	}
-			
-	return vNode;
+	
+	return "[" + resultChildren.join(", ") + "]";
 }
 
-v.fn.applyBindings = function(viewModel) {
-	var template = this.$template,
-		vTree;
+function createTemplateCore(vNode, inline) {
+	var templateBody = "";
+	
+	var bindingsString = createBindingsString(vNode);
+	
+	templateBody += bindingsString;
 
-	if(viewModel === undefined && this.$bindingContext) {
-		viewModel = this.$bindingContext.$data;
+	if(bindingsString) {
+		templateBody += "if(bindings.if !== undefined && !bindings.if) return;\n";
+		templateBody += "if(bindings.ifnot !== undefined && bindings.ifnot) return;\n";
+	}	
+	
+	var attrsString = JSON.stringify(vNode.attrs || {});
+
+	var needReturn = !inline || bindingsString;
+	
+	if(needReturn) {
+		templateBody += "var attrs = " + attrsString + ";\n";
 	}
 
-	if(template) {
-		vTree = applyBindingsCore(template, viewModel);
-		if(vTree) {
-			v(this.node, vTree.attrs, vTree.children || vTree.textContent);
-		}
+	if(bindingsString) {
+		templateBody += "for(var name in bindings) { if(name !== 'if' && name !== 'foreach' && name !== 'data-bind') attrs[name] = bindings[name]; }\n";
 	}
-};
+	
+	
+	var childrenString = createTemplateChildren(vNode.children || []);
+	
+	var parentContext = "{ $parents: context.$parents.concat(context.$data), $root: context.$root, $parent: context.$data, $parentContext: context }";
+
+	if(bindingsString && bindingsString.indexOf("foreach:") >= 0) {
+		childrenString = "(function(context, items) {\n var result = [];\n for(var i = 0; i < items.length; i++) {\n context.$data = items[i];\n context.$index = i;\n result = result.concat(" + childrenString + ");\n }\n return result;\n })(" + parentContext + ", bindings.foreach || [])";
+	}
+
+	if(childrenString !== "[]") {
+		childrenString += ".filter(function(item) { return item; })";
+	}
+
+	if(needReturn) {
+		templateBody += "return ";
+	}
+	if(vNode.tagName) {
+		templateBody += "[\"<" + vNode.tagName + ">\", " + (needReturn ? "attrs" : attrsString)  + ", " + childrenString + " ]";
+	}
+	else {
+		templateBody += "\"" + vNode.textContent + "\"";
+	}
+	if(inline && bindingsString) {
+		templateBody = "(function(context) {\n " + templateBody + " })(context)"
+	}
+	return templateBody;
+}
+
+
+function createTemplate(vNode) {
+	var templateBody = "var context = { $parents: [], $root: data, $data: data };\ndebugger;";
+	
+	templateBody += createTemplateCore(vNode);
+
+	return new Function("data", templateBody);
+}
 
 v.applyBindings = function(viewModel, element) {
-	var template;
+	var vNode;
 	
 	element = element || document.body;
 	
 	if(!element.v || !element.v.$template) {
-		var template = v(element).clone(true);
+		var vNode = v(element);
 		
-		element.v.$template = template;
+		element.v.$template = createTemplate(vNode);
 	}
-	element.v.applyBindings(viewModel);
+	vNode = element.v.$template(viewModel);
+
+	v(element, vNode[1], vNode[2]);
 }
 
 })(window);

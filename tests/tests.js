@@ -1,7 +1,19 @@
 (function() {
-"use strict";
+//"use strict";
 
 QUnit.module("Basic");
+
+/*QUnit.test("test", function(assert) {
+	
+	var names = [];
+
+	for(var name in jQuery.fn) {
+		names.push(name);
+	}
+	
+	assert.equal(names.join(" "), "function");
+});*/
+
 
 QUnit.test("namespace", function(assert) {
   assert.equal(typeof v, "function", "v is function" );
