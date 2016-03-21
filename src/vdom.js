@@ -166,7 +166,6 @@ function applyAttrs(vDom) {
 			}
 		}
 	}
-
 }
 
 function getNodeKey(vNode) {
@@ -319,5 +318,6 @@ v.fn = v.prototype = {
 v.fn.init.prototype = v.fn;
 
 //http://plnkr.co/edit/itZBEmj18NCid8lNjxeO?p=preview
+//http://plnkr.co/edit/sXhSWe76ea7NVrjcLfP2?p=preview
 
 })(window);
